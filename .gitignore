@@ -1,0 +1,10 @@
+_build/
+_opam/
+*.install
+*.corrected
+
+.DS_Store
+*.swp
+*.swo
+*~
+
