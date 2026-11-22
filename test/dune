@@ -1,0 +1,6 @@
+(library
+ (name ns_packet_test)
+ (libraries ox)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect)))

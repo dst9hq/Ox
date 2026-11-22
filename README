@@ -1,10 +1,7 @@
-Ox Network Stack (akin to RNS)
-================
+Ox 
+==
 
 An OxCaml implementation of the public-domain Reticulum protocol.
-
-Ox.Ns provides a native network stack for heterogeneous,
-decentralized, and resilient communications.
 
 Build:   make build
 Test:    make test
