@@ -228,6 +228,14 @@ module Header = struct
     if t land 0x1000 = 0 then Broadcast else Transport
   ;;
 
+  (** extract_two_bits is a helper func.
+
+    Shift right by [by] positions, then retain bits 1:0.
+
+    field(t, by) = (t >> by) & 0x03
+*)
+  let[@zero_alloc] extract_two_bits ~by t = (t lsr by) land 0x03
+
   (** destination_type extracts bits 11 and 10: Destination type.
 
       Shift the field to positions 1:0, then mask.
@@ -247,7 +255,7 @@ module Header = struct
       11 LINK
       v} *)
   let[@zero_alloc] destination_type t =
-    match (t lsr 10) land 0x03 with
+    match extract_two_bits ~by:10 t with
     | 0 -> Single
     | 1 -> Group
     | 2 -> Plain
@@ -273,7 +281,7 @@ module Header = struct
       11 PROOF
       v} *)
   let[@zero_alloc] packet_type t =
-    match (t lsr 8) land 0x03 with
+    match extract_two_bits ~by:8 t with
     | 0 -> Data
     | 1 -> Announce
     | 2 -> Link_request
