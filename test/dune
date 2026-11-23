@@ -1,6 +1,19 @@
 (library
  (name ns_packet_test)
+ (modules ns_packet_test)
  (libraries ox)
- (inline_tests)
+ (inline_tests
+  (flags
+   (-source-tree-root .)))
+ (preprocess
+  (pps ppx_expect)))
+
+(library
+ (name ns_address_test)
+ (modules ns_address_test)
+ (libraries ox)
+ (inline_tests
+  (flags
+   (-source-tree-root .)))
  (preprocess
   (pps ppx_expect)))

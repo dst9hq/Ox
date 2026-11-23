@@ -1,34 +1,150 @@
-(* == Reticulum Wire Format ======
+(** {1 Reticulum Wire Format}
 
-   A Reticulum packet is composed of the following fields:
+    A Reticulum packet consists of four fields:
 
-   [HEADER 2 bytes] [ADDRESSES 16/32 bytes] [CONTEXT 1 byte]
-   [DATA 0-465 bytes]
+    {v
+    [HEADER] [ADDRESSES] [CONTEXT] [DATA]
+     2 bytes  16/32 bytes  1 byte  0-465 bytes
+    v}
 
-   - The HEADER field is 2 bytes long.
-     - Byte 1: [IFAC Flag], [Header Type], [Context Flag],
-       [Propagation Type], [Destination Type] and [Packet Type]
-     - Byte 2: Number of hops
+    {2 Header}
 
-   - Interface Access Code field if the IFAC flag was set.
-     - The length of the Interface Access Code can vary from 1 to 64 bytes
-       according to physical interface capabilities and configuration.
+    The HEADER field occupies two bytes.
 
-   - The ADDRESSES field contains either 1 or 2 addresses.
-     - Each address is 16 bytes long.
-     - The Header Type flag in the HEADER field determines whether the
-       ADDRESSES field contains 1 or 2 addresses.
-     - Addresses are SHA-256 hashes truncated to 16 bytes.
+    - Byte 1 contains the IFAC flag, header type, context
+      flag, propagation type, destination type, and packet type.
+    - Byte 2 contains the hop count.
 
-   - The CONTEXT field is 1 byte.
-     - It is used by Reticulum to determine packet context.
+    {2 Interface Access Code}
 
-   - The DATA field is between 0 and 465 bytes.
-     - It contains the packets data payload.
+    If the IFAC flag is set, an Interface Access Code is
+    included after the header.
+
+    Its length varies from 1 to 64 bytes, depending on the
+    physical interface and its configuration.
+
+    {2 Addresses}
+
+    The ADDRESSES field contains one or two 16-byte addresses.
+
+    - HEADER_1 specifies one address.
+    - HEADER_2 specifies two addresses.
+    - Addresses are SHA-256 hashes truncated to 16 bytes.
+
+    {2 Context}
+
+    The CONTEXT field occupies one byte and determines the
+    context in which Reticulum interprets the packet.
+
+    {2 Data}
+
+    The DATA field contains between 0 and 465 bytes of
+    payload data.
+
+    Reference: https://reticulum.network/manual/
 *)
 
 module Header : sig
   type t
+
+  (** Reticulum destination types.
+
+      {v
+      00 SINGLE
+      01 GROUP
+      10 PLAIN
+      11 LINK
+      v} *)
+
+  type destination =
+    | Single
+    | Group
+    | Plain
+    | Link
+
+  (** Reticulum packet types.
+   
+      {v
+      Bits  Type
+      00    DATA
+      01    ANNOUNCE
+      10    LINKREQUEST
+      11    PROOF
+      v} *)
+  type packet_type =
+    | Data
+    | Announce
+    | Link_request
+    | Proof
+
+  (** Reticulum header types.
+    
+     {v
+      0 HEADER_1: one 16-byte addr 
+      1 HEADER_2: two 16-byte addr
+      v}
+   *)
+  type header_type =
+    | Header_1
+    | Header_2
+
+  (** Reticulum propagation types. 
+
+
+    {v
+    0 BROADCAST
+    1 TRANSPORT
+    v}
+   *)
+  type propagation =
+    | Broadcast
+    | Transport
+
+  (**
+      The mathematics:
+       F = (I << 7) | (H << 6) | (C << 5) |
+           (R << 4) | (D << 2) | P
+      reduces to:
+      
+      Header = (F << 8) | Hops
+
+      Where:
+        F    = Flags octet
+        I    = IFAC flag
+        H    = Header type
+        C    = Context flag
+        R    = Propagation type
+        D    = Destination type
+        P    = Packet type
+
+        <<   = Bitwise left shift
+        |    = Bitwise OR
+   *)
+
+  (** Construct a header from typed protocol fields.
+
+      Each field is encoded at its specified bit offset.
+
+      {v
+      IFAC         bit 7
+      Header       bit 6
+      Context      bit 5
+      Propagation  bit 4
+      Destination  bits 3:2
+      Packet       bits 1:0
+      Hops         second octet
+      v}
+
+      @raise Invalid_argument if hops is outside 0..255. *)
+  val make
+    :  ifac:bool
+    -> header_type:header_type
+    -> context_flag:bool
+    -> propagation_type:propagation
+    -> destination_type:destination
+    -> packet_type:packet_type
+    -> hops:int
+    -> t
 
   val of_octets : flags:int -> hops:int -> t
   val decode : bytes -> offset:int -> t
@@ -36,9 +152,9 @@ module Header : sig
   val flags : t -> int
   val hops : t -> int
   val ifac : t -> bool
-  val two_addresses : t -> bool
   val context_flag : t -> bool
-  val transport : t -> bool
-  val destination_type : t -> int
-  val packet_type : t -> int
+  val header_type : t -> header_type
+  val propagation_type : t -> propagation
+  val destination_type : t -> destination
+  val packet_type : t -> packet_type
 end

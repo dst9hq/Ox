@@ -1,3 +1,6 @@
 profile = janestreet
 version = unknown
 margin  = 77
+wrap-comments = false
+parse-docstrings = false
+doc-comments = before
