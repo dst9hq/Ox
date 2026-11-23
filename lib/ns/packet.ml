@@ -70,7 +70,7 @@ module Header = struct
     | Broadcast
     | Transport
 
-  (** Construct a header from two unsigned octets.
+  (** of_octets constructs a header from two unsigned octets.
 
       {v
       Flags           00000000 01010000
@@ -89,7 +89,7 @@ module Header = struct
     (flags lsl 8) lor hops
   ;;
 
-  (** Construct the flags octet from typed fields.
+  (** make onstructs the flags octet from typed fields.
 
     {v
     IFAC          0 << 7 = 00000000
@@ -154,7 +154,7 @@ module Header = struct
     of_octets ~flags ~hops
   ;;
 
-  (** Extract the upper eight bits.
+  (** flag extracts the upper eight bits.
 
       {v
       Original        01010000 00000100
@@ -164,7 +164,7 @@ module Header = struct
       v} *)
   let[@zero_alloc] flags t = t lsr 8
 
-  (** Extract the lower eight bits.
+  (** hops extracts the lower eight bits.
 
       {v
       Original        01010000 00000100
@@ -228,7 +228,7 @@ module Header = struct
     if t land 0x1000 = 0 then Broadcast else Transport
   ;;
 
-  (** Extract bits 11 and 10: Destination type.
+  (** destination_type extracts bits 11 and 10: Destination type.
 
       Shift the field to positions 1:0, then mask.
 
@@ -254,7 +254,7 @@ module Header = struct
     | _ -> Link
   ;;
 
-  (** Extract bits 9 and 8: Packet type.
+  (** packet_type extracts bits 9 and 8: Packet type.
 
       Shift the field to positions 1:0, then mask.
 

@@ -25,7 +25,7 @@ type t =
 
 let length = 16
 
-(** Verify that the complete address fits inside the
+(** view verifies that the complete address fits inside the
     supplied buffer.
 
     For a 35-byte packet:
@@ -43,7 +43,7 @@ let view buffer ~offset =
   { buffer; offset }
 ;;
 
-(** Read one address octet.
+(** get reads one address octet.
 
     The address index is relative to its view, not
     relative to the beginning of the packet.
@@ -53,7 +53,7 @@ let get t index =
   Bytes.get_uint8 t.buffer (t.offset + index)
 ;;
 
-(** Compare two 16-byte addresses without copying.
+(** equal compares two 16-byte addresses without copying.
 
     {v
     A[0] == B[0]
@@ -76,14 +76,14 @@ let equal a b =
   loop 0
 ;;
 
-(** Create an independently owned address buffer.
+(** copy reates an independently owned address buffer.
 
     Safe copy helper when the packet buffer may be reused while the address
     must remain available.
 *)
 let copy t = Bytes.sub t.buffer t.offset length
 
-(** Helper func.
+(** to_hex is a helper func.
 
     This allocates a new string and is not intended
     for the packet-processing hot path.
