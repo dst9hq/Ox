@@ -1,4 +1,6 @@
+module A = Ox.Ns.Address
 module H = Ox.Ns.Packet.Header
+module L = Ox.Ns.Packet.Layout
 module P = Printf
 
 let string_of_header_type = function
@@ -233,5 +235,29 @@ let%expect_test "typed construction rejects invalid hops" =
   [%expect {|
     rejected
     rejected
+    |}]
+;;
+
+let%expect_test "MTU boundaries" =
+  let check name flags size =
+    let buf = Bytes.make size '\000' in
+    Bytes.set_uint8 buf 0 flags;
+    match L.decode buf with
+    | Ok packet -> P.printf "%s: %d bytes\n" name (L.data_length packet)
+    | Error L.Payload_too_large -> P.printf "%s: too large\n" name
+    | Error _ -> P.printf "%s: unexpected error\n" name
+  in
+  check "HEADER_1 maximum" 0x00 500;
+  check "HEADER_1 overflow" 0x00 501;
+  check "HEADER_2 maximum" 0x00 500;
+  check "HEADER_2 overflow" 0x00 501;
+  check "HEADER_1 466" 0x00 (19 + 466);
+  [%expect
+    {|
+    HEADER_1 maximum: 481 bytes
+    HEADER_1 overflow: 482 bytes
+    HEADER_2 maximum: 481 bytes
+    HEADER_2 overflow: 482 bytes
+    HEADER_1 466: 466 bytes
     |}]
 ;;

@@ -327,3 +327,91 @@ module Header = struct
     Bytes.set_uint8 buf (offset + 1) (hops t)
   ;;
 end
+
+module Layout = struct
+  type t =
+    { header : Header.t
+    ; transport : Address.t option
+    ; destination : Address.t
+    ; context : int
+    ; data_offset : int
+    ; data_length : int
+    }
+
+  type error =
+    | Truncated_header
+    | Truncated_fields
+    | Ifac_requires_verification
+    | Payload_too_large
+
+  let mtu = 500
+  let header_length = 2
+  let context_length = 1
+  let header t = t.header
+  let transport t = t.transport
+  let destination t = t.destination
+  let context t = t.context
+  let data_offset t = t.data_offset
+  let data_length t = t.data_length
+
+  (** Decode the structural layout of a Reticulum packet.
+
+      The destination offset depends on the header type:
+
+      {v
+      HEADER_1
+        destination = 2
+        data = 2 + 16 + 1 = 19
+
+      HEADER_2
+        destination = 2 + 16 = 18
+        data = 2 + 16 + 16 + 1 = 35
+
+      Maximum packet size = 500 bytes.
+
+      Maximum data length:
+        HEADER_1 = 500 - 19 = 481
+        HEADER_2 = 500 - 35 = 465
+      v}
+
+      Address views borrow the original buffer.
+      IFAC verification is not implemented here.
+  *)
+  let decode buf =
+    let size = Bytes.length buf in
+    if size < header_length
+    then Error Truncated_header
+    else (
+      let header = Header.decode buf ~offset:0 in
+      if Header.ifac header
+      then Error Ifac_requires_verification
+      else (
+        let header_type = Header.header_type header in
+        let transport_length =
+          match header_type with
+          | Header.Header_1 -> 0
+          | Header.Header_2 -> Address.length
+        in
+        let destination_offset = header_length + transport_length in
+        let data_offset =
+          destination_offset + Address.length + context_length
+        in
+        if size < data_offset
+        then Error Truncated_fields
+        else (
+          let transport =
+            match header_type with
+            | Header.Header_1 -> None
+            | Header.Header_2 ->
+              Some (Address.view buf ~offset:header_length)
+          in
+          Ok
+            { header
+            ; transport
+            ; destination = Address.view buf ~offset:destination_offset
+            ; context = Bytes.get_uint8 buf (data_offset - context_length)
+            ; data_offset
+            ; data_length = size - data_offset
+            })))
+  ;;
+end

@@ -158,3 +158,39 @@ module Header : sig
   val destination_type : t -> destination
   val packet_type : t -> packet_type
 end
+
+(** {1 Packet Layout}
+
+    Decodes the structural fields of a Reticulum packet.
+
+    No address or payload bytes are copied.
+
+    {v
+    HEADER_1:
+      [HEADER:2] [DEST:16] [CTX:1] [DATA:N]
+
+    HEADER_2:
+      [HEADER:2] [TRANSPORT:16] [DEST:16]
+      [CTX:1] [DATA:N]
+    v}
+
+    IFAC-protected packets require authentication
+    before structural decoding.
+*)
+module Layout : sig
+  type t
+
+  type error =
+    | Truncated_header
+    | Truncated_fields
+    | Ifac_requires_verification
+    | Payload_too_large
+
+  val decode : bytes -> (t, error) result
+  val header : t -> Header.t
+  val transport : t -> Address.t option
+  val destination : t -> Address.t
+  val context : t -> int
+  val data_offset : t -> int
+  val data_length : t -> int
+end
