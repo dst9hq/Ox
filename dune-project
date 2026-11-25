@@ -1,26 +1,19 @@
 (lang dune 3.25)
-
-(name ox)
-
+(name ons)
 (generate_opam_files true)
 
-(source
- (github username/reponame))
-
-(authors "Author Name <author@example.com>")
-
-(maintainers "Maintainer Name <maintainer@example.com>")
-
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(source (github dst9hq/ons))
 
 (package
- (name ox)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml)
- (tags
-  ("add topics" "to describe" your project)))
+ (name ons)
+ (synopsis "Independent Reticulum networking stack in OxCaml")
+ (description 
+   "ons is an independent OxCaml implementation of the public-domain Reticulum
+   networking protocol. The project is in pre-alpha development, with
+   wire-level interoprability as its primary goal.")
+ (tags (networking reticulum mesh radio oxcaml))
+ (depends 
+   ocaml
+   (ppx_expect :with-test)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

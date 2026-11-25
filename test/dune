@@ -1,7 +1,7 @@
 (library
  (name ns_packet_test)
  (modules ns_packet_test)
- (libraries ox)
+ (libraries ons)
  (inline_tests
   (flags
    (-source-tree-root .)))
@@ -11,7 +11,7 @@
 (library
  (name ns_address_test)
  (modules ns_address_test)
- (libraries ox)
+ (libraries ons)
  (inline_tests
   (flags
    (-source-tree-root .)))
